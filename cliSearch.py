@@ -1,6 +1,9 @@
-import request
+import requests
+import os
 import json 
 import argparse
+from dotenv import load_dotenv
+load_dotenv()
 #Define the Arguement Parser object instance 
 parser = argparse.ArgumentParser('cliSearch', 'Let the user to make search query through terminal.')
 
@@ -25,4 +28,6 @@ params = {
 
 response = requests.get(url, params)
 
-print(rresponse.json())
+print(response.json())
+
+print(API_KEY, CX_ID)
