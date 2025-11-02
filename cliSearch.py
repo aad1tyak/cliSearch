@@ -34,13 +34,18 @@ search_response = requests.get(search_url, search_params)
 #Using gemini to simplify the search query
 gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
 
+search_results = search_response.json().get('items', [])
+summaries = []
+for item in search_results:
+    summaries.append(f"Title: {item.get('title')}\nSnippet: {item.get('snippet')}\n")
+
 gemini_params = {
     "contents": [
         {
             "role": "user",
             "parts": [
                 {
-                    "text": f"Summarize the key findings and main arguments from the following search results related. Present the answer in plain language, and address what the user is primarily seeking. Here is th search query: \n{args.query[0]}\nAnd here is the search result: \n{json.dumps(search_response.json())}"
+                    "text": f"Summarize the key findings from these search results for the query. Answer brefily don't waste token and time. Be very very quick in responding.'{args.query[0]}':\n{''.join(summaries)}"
                 }
             ],
         }
