@@ -11,7 +11,9 @@ load_dotenv()
 parser = argparse.ArgumentParser('cliSearch', 'Let the user to make search query through terminal.')
 
 #attach arguements for task 
-parser.add_argument('query', nargs=1)
+parser.add_argument('query', nargs=1) #stores the search query 
+parser.add_argument('-v', type=int, choices=[1, 2, 3], default=2) #1 -> Quick just breif 2-> Complete search query with no restruction; 3 -> Also include the content from first 3 sites  
+parser.add_argument('-n', 'n_query_result' type=int, default=5) #Numb of search result.
 
 args = parser.parse_args()
 
@@ -26,7 +28,7 @@ search_params = {
         'key': API_KEY,
         'cx': CX_ID,
         'q': args.query,
-        'num': 5  # Request up to 5 results for simplicity
+        'num': args.n_query_result 
     }
 
 search_response = requests.get(search_url, search_params)
@@ -35,9 +37,9 @@ search_response = requests.get(search_url, search_params)
 gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
 
 search_results = search_response.json().get('items', [])
-summaries = []
+query_summaries = []
 for item in search_results:
-    summaries.append(f"Title: {item.get('title')}\nSnippet: {item.get('snippet')}\n")
+    query_summaries.append(f"Title: {item.get('title')}\nSnippet: {item.get('snippet')}\n")
 
 gemini_params = {
     "contents": [
@@ -45,7 +47,7 @@ gemini_params = {
             "role": "user",
             "parts": [
                 {
-                    "text": f"Summarize the key findings from these search results for the query. Answer brefily don't waste token and time. Be very very quick in responding.'{args.query[0]}':\n{''.join(summaries)}"
+                    "text": f"Summarize the key findings from these search results for the query. Answer brefily don't waste token and time. Be very very quick in responding.'{args.query[0]}':\n{''.join(query_summaries)}"
                 }
             ],
         }
