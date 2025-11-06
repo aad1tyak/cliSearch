@@ -1,30 +1,43 @@
 import json
 import requests
 import os
+import csv
 from dotenv import load_dotenv
 load_dotenv()
 
+search_url = "https://google.serper.dev/search"
+queryList_File = "QueryList.txt"
 
-API_KEY = os.environ.get("API_KEY")
-CX_ID = os.environ.get("CUSTOM_SEARCH_CX_ID")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+search_results = [] #the input portion provided for training
 
+headers = {
+  'X-API-KEY': os.environ.get("SERPER_DEV"),
+  'Content-Type': 'application/json'
+}
 
-search_url = "https://www.googleapis.com/customsearch/v1"
+def runScript(query):
+    payload = json.dumps({
+        "q": query
+    })
 
-final_input = [] #the input portion provided for training
+    try:
+        response = requests.post(search_url, headers=headers, data=payload)
+        response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
+        search_items = response.json().get('organic', [])
+        clean_items = []
+        for item in search_items:
+            clean_items.append(f"Title: {item.get('title')}\n Snippet: {item.get('snippet')}\n Website Address:  {item.get('link')}\n \n \n")
+        search_results.append({"Query": query.strip(), "Search Items": "".join(clean_items)})
+    except requests.exceptions.RequestException as e:
+        print(f"Error during API request for query '{query.strip()}': {e}")
 
-def runScript(String query):
-    params = {
-        'key': API_KEY,
-        'cx': CX_ID,
-        'q': query,
-        'num': 5
-    }
+#Go through the QueryList file and perfrom search for all of the query
+with open(queryList_File, "r", encoding='utf-8', errors="ignore") as f:
+    for line in f:
+        runScript(line)
 
-    search_response = requests.get(search_url, search_params)
-
-
-with open('query_response.csv', 'w', encoding='utf-7') as f:
-
-
+with open('query_response.csv', 'w', encoding='utf-8', newline='') as f:
+    if search_results:
+        writer = csv.DictWriter(f, fieldnames=search_results[0].keys())
+        writer.writeheader()
+        writer.writerows(search_results)
