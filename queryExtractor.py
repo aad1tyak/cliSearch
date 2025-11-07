@@ -1,6 +1,6 @@
 import re
 
-input_file = "AOL_query.csv"     # path to your file
+input_file = "Data/AOL_queryData.csv"     # path to your file
 output_file = "clean_queries.txt"  # where to save 1000 unique queries
 
 unique_queries = set()
@@ -18,7 +18,7 @@ with open(input_file, "r", encoding="utf-8", errors="ignore") as f:
             if query and query not in unique_queries:
                 unique_queries.add(query)
                 cleaned_queries.append(query)
-                if len(cleaned_queries) >= 1000:
+                if len(cleaned_queries) >= 2500:
                     break
 
 # save them
