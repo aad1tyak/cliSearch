@@ -6,12 +6,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 search_url = "https://google.serper.dev/search"
-queryList_File = "QueryList.txt"
+queryList_File = "new_clean_queries.txt"
 
 search_results = [] #the input portion provided for training
 
-start = 0
-end = 500
+start = 1000
+end = 1500
 
 headers = {
   'X-API-KEY': os.environ.get("SERPER_DEV"),
@@ -19,7 +19,8 @@ headers = {
 }
 counter = 0
 def runScript(query):
-    counter += 1
+    global counter
+    counter = counter + 1
     payload = json.dumps({
         "q": query,
         "num": 4
@@ -32,7 +33,8 @@ def runScript(query):
         clean_items = []
         for item in search_items:
             clean_items.append(f"Title: {item.get('title')}\n Snippet: {item.get('snippet')}\n Website Address:  {item.get('link')}\n \n \n")
-        search_results.append({"Id: ": counter, Query": query.strip(), "Search Items": clean_items})
+        search_results.append({"Id: ": counter, "Query": query.strip(), "Search Items": clean_items})
+        print(f"Successful {counter} query!")
     except requests.exceptions.RequestException as e:
         print(f"Error during API request for query '{query.strip()}': {e}")
 
