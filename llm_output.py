@@ -9,16 +9,16 @@ load_dotenv()
 
 # CONFIG
 INPUT_FILE = "query_response.csv"
-OUTPUT_FILE = "LLM_trainingData.jsonl"
+OUTPUT_FILE = "LLM_trainingData(2.5-flash-lite).jsonl"
 
-START_ROW = 217 # inclusive: 1 = process from the first data row
-END_ROW = 500 # inclusive: set to None to continue until file ends
+START_ROW = 1 # inclusive: 1 = process from the first data row
+END_ROW = 2500 # inclusive: set to None to continue until file ends
 
 # API Key
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 gemini_url = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
+    "gemini-2.5-flash-lite:generateContent?key=" + GEMINI_API_KEY
 )
 
 def run_llm(input_text):
@@ -49,7 +49,7 @@ def run_llm(input_text):
     }
 
     r = requests.post(gemini_url, json=gemini_params)
-    time.sleep(3)
+    time.sleep(4)
     if r.status_code != 200:
         print("❌ Request failed:", r.status_code)
         sys.exit(1)
@@ -83,7 +83,7 @@ with open(INPUT_FILE, newline='', encoding='utf-8') as csvfile, \
             break
 
         try:
-            row_id = row.get("Id:", "").strip()
+            row_id = row.get("Id: ", "").strip()
             query = row.get("Query", "").strip()
             search_items = row.get("Search Items", "").strip()
         except:
