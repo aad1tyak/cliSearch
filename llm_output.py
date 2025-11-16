@@ -1,4 +1,5 @@
 import requests
+import time
 import csv
 import os
 import json
@@ -10,8 +11,8 @@ load_dotenv()
 INPUT_FILE = "query_response.csv"
 OUTPUT_FILE = "LLM_trainingData.jsonl"
 
-START_ROW = 1      # inclusive: 1 = process from the first data row
-END_ROW = 5 # inclusive: set to None to continue until file ends
+START_ROW = 217 # inclusive: 1 = process from the first data row
+END_ROW = 500 # inclusive: set to None to continue until file ends
 
 # API Key
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -48,7 +49,7 @@ def run_llm(input_text):
     }
 
     r = requests.post(gemini_url, json=gemini_params)
-
+    time.sleep(3)
     if r.status_code != 200:
         print("❌ Request failed:", r.status_code)
         sys.exit(1)
