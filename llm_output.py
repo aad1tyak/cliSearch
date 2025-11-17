@@ -11,11 +11,11 @@ load_dotenv()
 INPUT_FILE = "query_response.csv"
 OUTPUT_FILE = "LLM_trainingData(2.5-flash-lite).jsonl"
 
-START_ROW = 1 # inclusive: 1 = process from the first data row
-END_ROW = 2500 # inclusive: set to None to continue until file ends
+START_ROW = 1989        # inclusive
+END_ROW = 2499   # inclusive
 
 # API Key
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY4")
 gemini_url = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
     "gemini-2.5-flash-lite:generateContent?key=" + GEMINI_API_KEY
@@ -49,17 +49,28 @@ def run_llm(input_text):
     }
 
     r = requests.post(gemini_url, json=gemini_params)
-    time.sleep(4)
     if r.status_code != 200:
         print("❌ Request failed:", r.status_code)
         sys.exit(1)
 
+    response_json = r.json()
+
+    # 🔥 NEW: Detect prohibited content and gracefully skip it
     try:
-        response_json = r.json()
+        finish_reason = response_json["candidates"][0].get("finishReason")
+        if finish_reason == "PROHIBITED_CONTENT":
+            print("⚠ Skipped due to PROHIBITED_CONTENT")
+            return "[SKIPPED — PROHIBITED CONTENT DETECTED]"
+    except:
+        pass
+
+    # Normal case
+    try:
         return response_json["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         print("❌ Failed to parse Gemini output:", e)
-        sys.exit(1)
+        print(response_json)
+        return "[SKIPPED — PARSE ERROR]"
 
 
 # MAIN PROCESSING
@@ -73,11 +84,9 @@ with open(INPUT_FILE, newline='', encoding='utf-8') as csvfile, \
     for row in reader:
         current_row += 1
 
-        # Skip until start row
         if current_row < START_ROW:
             continue
         
-        # Stop after end row
         if END_ROW is not None and current_row > END_ROW:
             print("Reached END_ROW. Stopping.")
             break
@@ -100,7 +109,7 @@ with open(INPUT_FILE, newline='', encoding='utf-8') as csvfile, \
         llm_output = run_llm(llm_input)
 
         entry = {
-            "instruction": "Extract only the relevant parts of SearchItems that answer the Query.",
+            "instruction": "Extract only the relevant parts of SearchItems that directly answer the Query. Only include the minimal text needed. Use bullet points. Do not include URLs unless necessary to answer the query.",
             "input": llm_input,
             "output": llm_output
         }
@@ -108,3 +117,4 @@ with open(INPUT_FILE, newline='', encoding='utf-8') as csvfile, \
         out.write(json.dumps(entry) + "\n")
 
         print(f"✔ Completed row {current_row} (ID: {row_id})")
+        time.sleep(5)
